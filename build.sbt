@@ -8,6 +8,13 @@ scalaVersion in ThisBuild := "2.12.4"
 lagomCassandraEnabled in ThisBuild := false
 lagomKafkaEnabled in ThisBuild := false
 
+lazy val dockerSettings = Seq(
+  Docker / maintainer := "Juan Marin Otero",
+  dockerBaseImage := "openjdk:jre-alpine",
+  dockerRepository := Some("jmarin"),
+  dockerExposedPorts ++= Seq(9000, 9001)
+)
+
 lazy val helloServiceApi = project
   .in(file("hello-service-api"))
   .settings(common: _*)
@@ -19,7 +26,7 @@ lazy val helloServiceApi = project
 
 lazy val helloServiceImpl = project
   .in(file("hello-service-impl"))
-  .enablePlugins(LagomJava, Cinnamon)
+  .enablePlugins(LagomJava, Cinnamon, SbtReactiveAppPlugin)
   .settings(common: _*)
   .settings(
     // Enable Cinnamon during tests
@@ -30,12 +37,16 @@ lazy val helloServiceImpl = project
       // Use Coda Hale Metrics and Lagom instrumentation
       Cinnamon.library.cinnamonCHMetrics,
       Cinnamon.library.cinnamonLagom
-    )
+    ),
+    dockerSettings
   )
   .dependsOn(helloServiceApi)
 
 lazy val common = Seq(
   javacOptions in compile ++= Seq("-encoding", "UTF-8", "-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
   // See https://github.com/FasterXML/jackson-module-parameter-names
-  javacOptions in compile += "-parameters"
+  javacOptions in compile += "-parameters",
+  javaOptions in Universal ++= Seq(
+    "-Dpidfile.path=/dev/null"
+  )  
 )
