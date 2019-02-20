@@ -2,9 +2,9 @@
 A sample Lagom application with Cinnamon metrics
 
 ## Running
-Run with helloServiceImpl/test:runMain play.core.server.ProdServerStart to gather metrics
+Run with `helloServiceImpl/test:runMain play.core.server.ProdServerStart` to gather metrics
 
-Call http://localhost:9000/api/hello-proxy/World and see metrics in console
+Call http://localhost:9000/api/hello/World and see metrics in console
 
 ## Deployment
 From sbt, deploy to Minikube by running `rpDeploy minikube`

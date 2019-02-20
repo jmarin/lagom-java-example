@@ -4,9 +4,10 @@ version in ThisBuild := "0.1-SNAPSHOT"
 // The Scala version that will be used for cross-compiled libraries
 scalaVersion in ThisBuild := "2.12.4"
 
-// This sample is not using Cassandra or Kafka
-lagomCassandraEnabled in ThisBuild := false
+// This sample is not using Kafka
 lagomKafkaEnabled in ThisBuild := false
+
+val lombok = "org.projectlombok" % "lombok" % "1.16.18"
 
 lazy val dockerSettings = Seq(
   Docker / maintainer := "Juan Marin Otero",
@@ -20,7 +21,8 @@ lazy val helloServiceApi = project
   .settings(common: _*)
   .settings(
     libraryDependencies ++= Seq(
-      lagomJavadslApi
+      lagomJavadslApi,
+      lombok
     )
   )
 
@@ -34,8 +36,13 @@ lazy val helloServiceImpl = project
     // Add a play secret to javaOptions in run in Test, so we can run Lagom forked
     javaOptions in (Test, run) += "-Dplay.http.secret.key=x",
     libraryDependencies ++= Seq(
+      lagomJavadslPersistenceCassandra,
+      lagomLogback,
+      lagomJavadslTestKit,
+      lombok,
       // Use Coda Hale Metrics and Lagom instrumentation
-      Cinnamon.library.cinnamonCHMetrics,
+      Cinnamon.library.cinnamonPrometheus,
+      Cinnamon.library.cinnamonPrometheusHttpServer,
       Cinnamon.library.cinnamonLagom
     ),
     dockerSettings
