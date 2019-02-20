@@ -1,8 +1,10 @@
 package cinnamon.lagom.impl;
 
 import akka.Done;
+import akka.actor.ActorSystem;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntity;
 
+import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -26,6 +28,14 @@ import java.util.Optional;
  * which is emitted when a ${@link cinnamon.lagom.impl.HelloCommand.UseGreetingMessage} command is received.
  */
 public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, HelloState> {
+
+    private final ActorSystem actorSystem;
+
+    @Inject
+    public HelloEntity(ActorSystem actorSystem) {
+        this.actorSystem = actorSystem;
+        System.out.println("LOG LEVEL: " + actorSystem.settings().LogLevel());
+    }
 
     /**
      * An Entity can define different behaviors for different states, but it will always start
