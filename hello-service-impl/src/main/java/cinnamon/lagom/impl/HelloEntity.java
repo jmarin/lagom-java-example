@@ -5,6 +5,8 @@ import akka.actor.ActorSystem;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntity;
 
 import javax.inject.Inject;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -37,6 +39,7 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
     private final Counter helloCounter;
     private final Counter useGreetingMessageCounter;
     private final Counter greetingMessageChangedCounter;
+    private final Recorder useGreetingMessageRecorder;
 
     @Inject
     public HelloEntity(ActorSystem actorSystem) {
@@ -44,6 +47,7 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
         helloCounter = CinnamonMetrics.get(actorSystem).createCounter("hello_command_counter");
         useGreetingMessageCounter = CinnamonMetrics.get(actorSystem).createCounter("use_greeting_message_command_counter");
         greetingMessageChangedCounter = CinnamonMetrics.get(actorSystem).createCounter("greeting_message_changed_event_counter");
+        useGreetingMessageRecorder = CinnamonMetrics.get(actorSystem).createRecorder("use_greeting_message_persist_timer");
     }
 
     /**
@@ -81,8 +85,12 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
         * Command handler for the UseGreetingMessage command.
         */
         b.setCommandHandler(HelloCommand.UseGreetingMessage.class, (cmd, ctx) -> {
+            Instant useGreetingMessageStartTime = Instant.now();
             useGreetingMessageCounter.increment();
             return ctx.thenPersist(new HelloEvent.GreetingMessageChanged(entityId(), cmd.message), evt -> {
+                Instant useGreetingMessageStopTime = Instant.now();
+                long timeElapsed = Duration.between(useGreetingMessageStartTime, useGreetingMessageStopTime).toMillis();
+                useGreetingMessageRecorder.record(timeElapsed);
                 ctx.reply(Done.getInstance());
             });
         });
