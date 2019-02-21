@@ -39,7 +39,7 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
     @Inject
     public HelloEntity(ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
-        helloCommandCounter = CinnamonMetrics.get(actorSystem).createCounter("helloCommandCounter");
+        helloCommandCounter = CinnamonMetrics.get(actorSystem).createCounter("hello_command_counter");
     }
 
     /**
