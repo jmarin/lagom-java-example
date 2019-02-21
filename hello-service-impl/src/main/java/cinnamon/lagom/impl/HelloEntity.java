@@ -39,7 +39,7 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
     private final Counter helloCounter;
     private final Counter useGreetingMessageCounter;
     private final Counter greetingMessageChangedCounter;
-    private final Recorder useGreetingMessageRecorder;
+    private final Recorder greetingMessageChangedRecorder;
 
     @Inject
     public HelloEntity(ActorSystem actorSystem) {
@@ -47,7 +47,7 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
         helloCounter = CinnamonMetrics.get(actorSystem).createCounter("hello_command_counter");
         useGreetingMessageCounter = CinnamonMetrics.get(actorSystem).createCounter("use_greeting_message_command_counter");
         greetingMessageChangedCounter = CinnamonMetrics.get(actorSystem).createCounter("greeting_message_changed_event_counter");
-        useGreetingMessageRecorder = CinnamonMetrics.get(actorSystem).createRecorder("greeting_message_changed_event_persist_timer");
+        greetingMessageChangedRecorder = CinnamonMetrics.get(actorSystem).createRecorder("greeting_message_changed_event_persist_timer");
     }
 
     /**
@@ -90,7 +90,7 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
             return ctx.thenPersist(new HelloEvent.GreetingMessageChanged(entityId(), cmd.message), evt -> {
                 Instant useGreetingMessageStopTime = Instant.now();
                 long timeElapsed = Duration.between(useGreetingMessageStartTime, useGreetingMessageStopTime).toMillis();
-                useGreetingMessageRecorder.record(timeElapsed);
+                greetingMessageChangedRecorder.record(timeElapsed);
                 ctx.reply(Done.getInstance());
             });
         });
