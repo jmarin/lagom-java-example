@@ -8,6 +8,10 @@ import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+//Import custom metrics interfaces
+import com.lightbend.cinnamon.akka.CinnamonMetrics;
+import com.lightbend.cinnamon.metric.*;
+
 /**
  * This is an event sourced entity. It has a state, {@link HelloState}, which
  * stores what the greeting should be (eg, "Hello").
@@ -30,11 +34,12 @@ import java.util.Optional;
 public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, HelloState> {
 
     private final ActorSystem actorSystem;
+    private final Counter helloCommandCounter;
 
     @Inject
     public HelloEntity(ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
-        System.out.println("LOG LEVEL: " + actorSystem.settings().LogLevel());
+        helloCommandCounter = CinnamonMetrics.get(actorSystem).createCounter("helloCommandCounter");
     }
 
     /**
@@ -44,7 +49,7 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
     @Override
     public Behavior initialBehavior(Optional<HelloState> snapshotState) {
        /*
-        * Behavior is define using a behavior builder. The behavior builder
+        * Behavior is defined using a behavior builder. The behavior builder
         * starts with a state, if this entity supports snapshots (an
         * optimization that allows the state itself to be persisted to combine many
         * events into one), then the passed in snapshotState may have a value that
@@ -61,10 +66,18 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
        /*
         * Command handler (read only) for the Hello command.
         */
-       b.setReadOnlyCommandHandler(HelloCommand.Hello.class,
-               // Get the greeting from the current state, and prepend it to the name
-               // that we're sending a greeting to, and reply with that message.
-               (cmd, ctx) ->   ctx.reply(state().message + ", " + cmd.name + "!"));
+//       b.setReadOnlyCommandHandler(HelloCommand.Hello.class,
+//               // Get the greeting from the current state, and prepend it to the name
+//               // that we're sending a greeting to, and reply with that message.
+//               (cmd, ctx) ->   ctx.reply(state().message + ", " + cmd.name + "!"));
+
+
+        b.setReadOnlyCommandHandler(HelloCommand.Hello.class, (cmd, ctx) -> {
+            //Get the greeting from the current state, and prepend it to the name
+            // that we're sending a greeting to, and reply with that message.
+            helloCommandCounter.increment();
+            ctx.reply(state().message + ", " + cmd.name + "!");
+        });
 
        /*
         * Command handler for the UseGreetingMessage command.
