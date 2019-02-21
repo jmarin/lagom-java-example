@@ -34,14 +34,16 @@ import com.lightbend.cinnamon.metric.*;
 public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, HelloState> {
 
     private final ActorSystem actorSystem;
-    private final Counter helloCommandCounter;
+    private final Counter helloCounter;
     private final Counter useGreetingMessageCounter;
+    private final Counter greetingMessageChangedCounter;
 
     @Inject
     public HelloEntity(ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
-        helloCommandCounter = CinnamonMetrics.get(actorSystem).createCounter("hello_command_counter");
+        helloCounter = CinnamonMetrics.get(actorSystem).createCounter("hello_command_counter");
         useGreetingMessageCounter = CinnamonMetrics.get(actorSystem).createCounter("use_greeting_message_command_counter");
+        greetingMessageChangedCounter = CinnamonMetrics.get(actorSystem).createCounter("greeting_message_changed_event_counter");
     }
 
     /**
@@ -69,7 +71,7 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
         * Command handler (read only) for the Hello command.
         */
         b.setReadOnlyCommandHandler(HelloCommand.Hello.class, (cmd, ctx) -> {
-            helloCommandCounter.increment();
+            helloCounter.increment();
             //Get the greeting from the current state, and prepend it to the name
             // that we're sending a greeting to, and reply with that message.
             ctx.reply(state().message + ", " + cmd.name + "!");
@@ -91,7 +93,10 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
        b.setEventHandler(HelloEvent.GreetingMessageChanged.class,
                //We simply update the current state to use the greeting message
                // from the event
-               evt -> new HelloState(evt.message, LocalDateTime.now().toString()));
+               evt -> {
+                    greetingMessageChangedCounter.increment();
+                    return new HelloState(evt.message, LocalDateTime.now().toString());
+               });
 
        /*
         * We've defined all our behavior, so build and return it.
