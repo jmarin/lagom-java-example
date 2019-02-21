@@ -35,11 +35,13 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
 
     private final ActorSystem actorSystem;
     private final Counter helloCommandCounter;
+    private final Counter useGreetingMessageCounter;
 
     @Inject
     public HelloEntity(ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
         helloCommandCounter = CinnamonMetrics.get(actorSystem).createCounter("hello_command_counter");
+        useGreetingMessageCounter = CinnamonMetrics.get(actorSystem).createCounter("use_greeting_message_command_counter");
     }
 
     /**
@@ -66,28 +68,24 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
        /*
         * Command handler (read only) for the Hello command.
         */
-//       b.setReadOnlyCommandHandler(HelloCommand.Hello.class,
-//               // Get the greeting from the current state, and prepend it to the name
-//               // that we're sending a greeting to, and reply with that message.
-//               (cmd, ctx) ->   ctx.reply(state().message + ", " + cmd.name + "!"));
-
-
         b.setReadOnlyCommandHandler(HelloCommand.Hello.class, (cmd, ctx) -> {
+            helloCommandCounter.increment();
             //Get the greeting from the current state, and prepend it to the name
             // that we're sending a greeting to, and reply with that message.
-            helloCommandCounter.increment();
             ctx.reply(state().message + ", " + cmd.name + "!");
         });
 
        /*
         * Command handler for the UseGreetingMessage command.
         */
-       b.setCommandHandler(HelloCommand.UseGreetingMessage.class, (cmd, ctx) ->
-         ctx.thenPersist(new HelloEvent.GreetingMessageChanged(entityId(), cmd.message),
-                 evt -> ctx.reply(Done.getInstance()))
-       );
+        b.setCommandHandler(HelloCommand.UseGreetingMessage.class, (cmd, ctx) -> {
+            useGreetingMessageCounter.increment();
+            return ctx.thenPersist(new HelloEvent.GreetingMessageChanged(entityId(), cmd.message), evt -> {
+                ctx.reply(Done.getInstance());
+            });
+        });
 
-       /*
+        /*
         * Event handler for the GreetingMessageChanged event
         */
        b.setEventHandler(HelloEvent.GreetingMessageChanged.class,
