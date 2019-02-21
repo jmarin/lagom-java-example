@@ -47,7 +47,7 @@ public class HelloEntity extends PersistentEntity<HelloCommand, HelloEvent, Hell
         helloCounter = CinnamonMetrics.get(actorSystem).createCounter("hello_command_counter");
         useGreetingMessageCounter = CinnamonMetrics.get(actorSystem).createCounter("use_greeting_message_command_counter");
         greetingMessageChangedCounter = CinnamonMetrics.get(actorSystem).createCounter("greeting_message_changed_event_counter");
-        useGreetingMessageRecorder = CinnamonMetrics.get(actorSystem).createRecorder("use_greeting_message_persist_timer");
+        useGreetingMessageRecorder = CinnamonMetrics.get(actorSystem).createRecorder("greeting_message_changed_event_persist_timer");
     }
 
     /**
