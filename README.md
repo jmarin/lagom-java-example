@@ -1,10 +1,14 @@
 # lagom-java-example
-A sample Lagom application with Cinnamon metrics
+A sample Lagom application with custom Cinnamon metrics for Persistent Entity
 
 ## Running
-Run with `helloServiceImpl/test:runMain play.core.server.ProdServerStart` to gather metrics
+Run with `helloServiceImpl/test:runMain play.core.server.ProdServerStart`. When run locally, metrics will be exposed at `http://localhost:9001/metrics`
 
-Call http://localhost:9000/api/hello/World and see metrics in console
+## Endpoints
+`curl http://localhost:9000/api/hello/Alice` (to see a greeting message)
+
+`curl -H "Contenty-Type: application/json" -X POST -d '{"message": "Hi"}'  http://localhost:9000/api/hello/Alice` (to change the greeting message)
+
 
 ## Deployment
 From sbt, deploy to Minikube by running `rpDeploy minikube`
